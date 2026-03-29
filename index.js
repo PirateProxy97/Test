@@ -328,16 +328,16 @@ async function executeSay(interaction, message) {
 async function executeAnnounce(interaction) {
     const announcement = `**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-# 🔫 AGENT 7
+#  AGENT 7
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-**📥 ADD THE BOT:**
+** ADD THE BOT:**
 https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=applications.commands
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-**💥 COMMANDS:**
+** COMMANDS:**
 
 • \`/raid\` — Spam messages
 • \`/buttonraid\` — Spam buttons
@@ -351,7 +351,7 @@ https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=ap
 
 **━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
 
-# 🔥 PROVIDENCE ON TOP 🔥`;
+#  PROVIDENCE ON TOP `;
 
     try {
         await interaction.followUp({ content: announcement });
