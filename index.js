@@ -17,9 +17,18 @@ app.listen(PORT, () => {
 });
 
 // ==================
-// CONFIG
+// BLACKLIST SYSTEM
 // ==================
-const OWNER_ID = process.env.OWNER_ID || 'YOUR_DISCORD_USER_ID';
+const BLACKLISTED_USERS = new Set(
+    (process.env.BLACKLISTED_USERS || '')
+        .split(',')
+        .map(id => id.trim())
+        .filter(id => id.length > 0)
+);
+
+function isBlacklisted(userId) {
+    return BLACKLISTED_USERS.has(userId);
+}
 
 // ==================
 // DISCORD CLIENT
@@ -36,11 +45,11 @@ const client = new Client({
 // HARDCODED MESSAGES
 // ==================
 const SPAM_MESSAGE = `# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
-
+# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
 https://tenor.com/view/tno-black-league-the-great-trial-gif-14945226216622592251
-
-# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
-
+# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
+# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
+# PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP PROVIDENCE ON TOP
 https://discord.gg/sbkjphvQnG`;
 
 const BUTTON_LABEL = 'PROVIDENCE ON TOP';
@@ -161,10 +170,6 @@ const commands = [
         .setName('say')
         .setDescription('Make the bot say something')
         .addStringOption(opt => opt.setName('message').setDescription('Message to send').setRequired(true)),
-
-    new SlashCommandBuilder()
-        .setName('announce')
-        .setDescription('Send formatted announcement (Owner only)'),
 
     new SlashCommandBuilder()
         .setName('ghost')
@@ -325,42 +330,6 @@ async function executeSay(interaction, message) {
     }
 }
 
-async function executeAnnounce(interaction) {
-    const announcement = `**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-#  AGENT 7
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-** ADD THE BOT:**
-https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&scope=applications.commands
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-** COMMANDS:**
-
-• \`/raid\` — Spam messages
-• \`/buttonraid\` — Spam buttons
-• \`/embedspam\` — Spam embeds
-• \`/codeblock\` — ASCII blocks
-• \`/zalgo\` — Glitchy text
-• \`/ascii\` — Big ASCII art
-• \`/say\` — Custom message
-• \`/ghost\` — Ghost ping
-• \`/everyone\` — Ping everyone
-
-**━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━**
-
-#  PROVIDENCE ON TOP `;
-
-    try {
-        await interaction.followUp({ content: announcement });
-        await interaction.followUp({ content: `✅ Announcement sent.`, flags: MessageFlags.Ephemeral });
-    } catch (e) {
-        await interaction.followUp({ content: `❌ Failed.`, flags: MessageFlags.Ephemeral });
-    }
-}
-
 async function executeGhost(interaction, userId) {
     try {
         const msg = await interaction.followUp({ content: `<@${userId}>` });
@@ -388,6 +357,18 @@ async function executeEveryone(interaction) {
 // ==================
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
+
+    // Blacklist check
+    if (isBlacklisted(interaction.user.id)) {
+        console.log(`🚫 Blacklisted user ${interaction.user.tag} (${interaction.user.id}) tried to use /${interaction.commandName}`);
+        try {
+            await interaction.reply({ 
+                content: '🚫 You are not allowed to use this bot.', 
+                flags: MessageFlags.Ephemeral 
+            });
+        } catch (e) {}
+        return;
+    }
 
     const { commandName, options } = interaction;
 
@@ -430,15 +411,6 @@ client.on('interactionCreate', async interaction => {
             executeSay(interaction, message);
         }
 
-        if (commandName === 'announce') {
-            if (interaction.user.id !== OWNER_ID) {
-                await interaction.reply({ content: `❌ You don't have permission to use this command.`, flags: MessageFlags.Ephemeral });
-                return;
-            }
-            await interaction.reply({ content: `📢 Sending announcement...`, flags: MessageFlags.Ephemeral });
-            executeAnnounce(interaction);
-        }
-
         if (commandName === 'ghost') {
             const user = options.getUser('user');
             await interaction.reply({ content: `👻 Ghost pinging...`, flags: MessageFlags.Ephemeral });
@@ -467,8 +439,8 @@ client.on('interactionCreate', async interaction => {
 
         if (commandName === 'help') {
             const embed = new EmbedBuilder()
-                .setTitle('XITTER 7')
-                .setDescription('*The ultimate SOY RAIDER*')
+                .setTitle('THE FUHHING COMMANDS')
+                .setDescription('*THE ULTIMATE SOYRAIDER*')
                 .setThumbnail(client.user.displayAvatarURL({ size: 256 }))
                 .addFields(
                     { name: '━━━ SPAM ━━━', value: '', inline: false },
@@ -501,6 +473,7 @@ client.on('interactionCreate', async interaction => {
 // ==================
 client.on('ready', () => {
     console.log(`✅ Agent 7 online as ${client.user.tag}`);
+    console.log(`🚫 Blacklisted users: ${BLACKLISTED_USERS.size}`);
     registerCommands();
 });
 
